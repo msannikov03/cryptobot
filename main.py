@@ -1,7 +1,8 @@
 import logging
-from openai import AsyncOpenAI
 import openai
 import json
+from openai import AsyncOpenAI
+from database import add_user, add_trade, get_user_trades
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
@@ -40,10 +41,13 @@ async def verify(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text('Please send your verification token using /verify <your_token_here>.')
 
 async def openai_query(user_message):
+    instructions = "This is a prediction message from a telegram channel. Convert this message to a binance trade. I need the trade coin id and quantity:"
+    
+    full_prompt = instructions + user_message
     try:
         chat_completion = await client.chat.completions.create(
             messages=[
-                {"role": "user", "content": user_message},
+                {"role": "user", "content": full_prompt},
             ],
             model="gpt-3.5-turbo-1106",
         )
